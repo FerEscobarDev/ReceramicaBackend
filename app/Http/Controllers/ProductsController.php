@@ -99,9 +99,9 @@ class ProductsController extends Controller
 
             foreach ($request->images as $image) {
                 $url = $image['file']->store('creaciones_images', 'public');
-                $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url), 75);
+                $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url));
                 $interventionImage->coverDown(900,1350);
-                $interventionImage->save(storage_path('app/public/' . $url));
+                $interventionImage->save(storage_path('app/public/' . $url), 75);
                 $product->images()->create([
                     'url' => $url,
                     'alt' => $product->name,
