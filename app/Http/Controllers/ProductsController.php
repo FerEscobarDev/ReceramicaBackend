@@ -126,4 +126,26 @@ class ProductsController extends Controller
 
         return redirect()->route('creaciones');
     }
+
+    //crear metodo que permita subir muchas imagenes a la vez y mantenga el nombre de la imagen original y las redimensione
+
+    public function uploadImages(Request $request)
+    {
+        $request->validate([
+            'images' => 'required|array',
+            'images.*' => 'required|image'
+        ]);
+
+        $urls = [];
+
+        foreach ($request->images as $image) {
+            $url = $image->storeAs('creaciones_images', 'public');
+            $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url));
+            $interventionImage->coverDown(900,1350);
+            $interventionImage->save(storage_path('app/public/' . $url), 75);
+            $urls[] = $url;
+        }
+
+        return $urls;
+    }    
 }

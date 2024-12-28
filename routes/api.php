@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductsController;
 use App\Models\Image;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
@@ -21,4 +22,5 @@ Route::middleware([
                 $query->where('landing', 1);
             })->get());
     })->name('creacionesFront');
+    Route::post('/uploadImages', [ProductsController::class, 'uploadImages']);
 });
