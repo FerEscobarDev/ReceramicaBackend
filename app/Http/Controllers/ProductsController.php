@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Image;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,6 +21,19 @@ class ProductsController extends Controller
     public function create()
     {
         return inertia('Product/Create');
+    }
+
+    public function viewImages()
+    {
+        return Inertia::render('Product/ShowImages', [
+            'images' => Image::get()->map(function($image) {
+                return [
+                    'image' => $image,
+                    'src' => Storage::url($image->url),
+                    'size' => Storage::disk('public')->size($image->url)
+                ];
+            })
+        ]);
     }
 
     public function store(Request $request)
@@ -44,7 +58,7 @@ class ProductsController extends Controller
             $url = $image['file']->store('creaciones_images', 'public');
 
             $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url));
-            $interventionImage->coverDown(900,1350);
+            $interventionImage->coverDown(400,600);
             $interventionImage->save(storage_path('app/public/' . $url), 75);
 
             $product->images()->create([
@@ -100,7 +114,7 @@ class ProductsController extends Controller
             foreach ($request->images as $image) {
                 $url = $image['file']->store('creaciones_images', 'public');
                 $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url));
-                $interventionImage->coverDown(900,1350);
+                $interventionImage->coverDown(400,600);
                 $interventionImage->save(storage_path('app/public/' . $url), 75);
                 $product->images()->create([
                     'url' => $url,
@@ -127,25 +141,17 @@ class ProductsController extends Controller
         return redirect()->route('creaciones');
     }
 
-    //crear metodo que permita subir muchas imagenes a la vez y mantenga el nombre de la imagen original y las redimensione
-
-    public function uploadImages(Request $request)
+    public function optimizeImages()
     {
-        $request->validate([
-            'images' => 'required|array',
-            'images.*' => 'required|image'
-        ]);
+        $images = Image::get();
 
-        $urls = [];
-
-        foreach ($request->images as $image) {
-            $url = $image->storeAs('creaciones_images', 'public');
+        $images->each(function($image) use (&$urls) {
+            $url = $image->url;
             $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url));
-            $interventionImage->coverDown(900,1350);
+            $interventionImage->coverDown(400,600);
             $interventionImage->save(storage_path('app/public/' . $url), 75);
-            $urls[] = $url;
-        }
+        });
 
-        return $urls;
+        return redirect()->route('creaciones.images');
     }    
 }

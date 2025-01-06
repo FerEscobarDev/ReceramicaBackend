@@ -35,4 +35,10 @@ Route::middleware([
     Route::post('/creaciones/update/{product}', [
         ProductsController::class, 'update'
     ])->name('creaciones.update');
+    Route::get('/creaciones/images', [
+        ProductsController::class, 'viewImages'
+    ])->name('creaciones.images');
+    Route::post('creaciones/images/optimize', [
+        ProductsController::class, 'optimizeImages'
+    ])->name('creaciones.images.optimize');
 });
