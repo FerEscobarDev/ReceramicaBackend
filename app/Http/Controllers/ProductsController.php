@@ -11,7 +11,7 @@ use Intervention\Image\ImageManager;
 
 class ProductsController extends Controller
 {
-     public function index()
+    public function index()
     {
         return Inertia::render('Product/Creaciones', [
             'products' => Product::all()->load('images')
@@ -26,7 +26,7 @@ class ProductsController extends Controller
     public function viewImages()
     {
         return Inertia::render('Product/ShowImages', [
-            'images' => Image::get()->map(function($image) {
+            'images' => Image::get()->map(function ($image) {
                 return [
                     'image' => $image,
                     'src' => Storage::url($image->url),
@@ -49,16 +49,19 @@ class ProductsController extends Controller
         if ($request->landing && !collect($request->images)->contains('isMain', true)) {
             return back()->withErrors(['images' => 'You must select a main image']);
         }
-        
+
         $product = Product::create(
             $request->only('name', 'description', 'landing')
         );
 
         foreach ($request->images as $image) {
+            if (!isset($image['file']) || !$image['file']) {
+                continue;
+            }
             $url = $image['file']->store('creaciones_images', 'public');
 
             $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url));
-            $interventionImage->coverDown(400,600);
+            $interventionImage->coverDown(400, 600);
             $interventionImage->save(storage_path('app/public/' . $url), 75);
 
             $product->images()->create([
@@ -98,23 +101,26 @@ class ProductsController extends Controller
         if ($request->landing && !collect($request->images)->contains('isMain', true)) {
             return back()->withErrors(['images' => 'You must select a main image']);
         }
-        
+
         $product->update(
             $request->only('name', 'description', 'landing')
-        );   
+        );
 
-        if (array_filter($request->images, fn($image) => $image['file'] !== null)) {
-            
-            foreach($product->images as $image) {
+        if (array_filter($request->images, fn($image) => !empty($image['file']))) {
+
+            foreach ($product->images as $image) {
                 Storage::disk('public')->delete($image->url);
             }
-            if($product->images()->count() > 0)
+            if ($product->images()->count() > 0)
                 $product->images()->delete();
 
             foreach ($request->images as $image) {
+                if (!isset($image['file']) || !$image['file']) {
+                    continue;
+                }
                 $url = $image['file']->store('creaciones_images', 'public');
                 $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url));
-                $interventionImage->coverDown(400,600);
+                $interventionImage->coverDown(400, 600);
                 $interventionImage->save(storage_path('app/public/' . $url), 75);
                 $product->images()->create([
                     'url' => $url,
@@ -130,8 +136,8 @@ class ProductsController extends Controller
 
     public function destroy(Product $product)
     {
-        if($product->images()->count() > 0) {
-            foreach($product->images as $image) {
+        if ($product->images()->count() > 0) {
+            foreach ($product->images as $image) {
                 Storage::disk('public')->delete($image->url);
             }
         }
@@ -145,13 +151,13 @@ class ProductsController extends Controller
     {
         $images = Image::get();
 
-        $images->each(function($image) use (&$urls) {
+        $images->each(function ($image) use (&$urls) {
             $url = $image->url;
             $interventionImage = ImageManager::gd()->read(storage_path('app/public/' . $url));
-            $interventionImage->coverDown(400,600);
+            $interventionImage->coverDown(400, 600);
             $interventionImage->save(storage_path('app/public/' . $url), 75);
         });
 
         return redirect()->route('creaciones.images');
-    }    
+    }
 }
