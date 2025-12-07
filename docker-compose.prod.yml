@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile.prod
     container_name: receramica-laravel-app
     restart: unless-stopped
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     environment:
       - APP_NAME=${APP_NAME:-Receramica}
       - APP_ENV=${APP_ENV:-production}
