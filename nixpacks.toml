@@ -3,4 +3,4 @@ IS_LARAVEL = "yes"
 NIXPACKS_PHP_ROOT_DIR = "/app/public"
 
 [start]
-cmd = "php artisan storage:link && node /assets/scripts/prestart.mjs /nginx.conf /nginx.conf && (php-fpm -y /assets/php-fpm.conf & nginx -c /nginx.conf)"
+cmd = "php artisan storage:link && (php-fpm -y /assets/php-fpm.conf & nginx -c /app/nginx.conf)"
