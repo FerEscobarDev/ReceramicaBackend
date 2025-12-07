@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -63,3 +61,10 @@ services:
     volumes:
       # Bind mount para imágenes (usa el volumen del host de Dokploy)
       - /var/lib/docker/creaciones_images:/app/storage/app/public/creaciones_images
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
+    name: dokploy-network
