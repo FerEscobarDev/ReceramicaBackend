@@ -21,10 +21,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Configurar y compilar extensión GD con soporte completo para Intervention Image
-RUN docker-php-ext-configure gd \
-    --with-freetype=/usr/include/ \
-    --with-jpeg=/usr/include/ \
-    --with-webp=/usr/include/ \
+# Nota: En PHP 8.2+, GD detecta automáticamente las bibliotecas instaladas
+RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) \
     pdo_mysql \
     mbstring \
