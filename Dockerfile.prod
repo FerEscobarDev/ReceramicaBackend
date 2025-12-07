@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     libwebp-dev \
     libxpm-dev \
+    libicu-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Configurar y compilar extensión GD con soporte completo para Intervention Image
