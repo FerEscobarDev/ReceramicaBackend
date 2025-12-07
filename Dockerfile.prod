@@ -64,8 +64,8 @@ RUN composer install \
 # Copiar todo el código de la aplicación
 COPY . .
 
-# Ejecutar scripts post-install de Composer
-RUN composer dump-autoload --optimize
+# Ejecutar scripts post-install de Composer (sin ejecutar package discovery)
+RUN composer dump-autoload --optimize --no-scripts
 
 # Copiar configuración personalizada de PHP
 COPY .user.ini /usr/local/etc/php/conf.d/uploads.ini
