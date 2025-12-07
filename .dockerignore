@@ -1,0 +1,62 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDEs
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Tests
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+*.log
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+
+# Sail
+vendor/laravel/sail/
+
+# Cache
+.phpunit.cache
+bootstrap/cache/*
+!bootstrap/cache/.gitkeep
+storage/framework/cache/*
+!storage/framework/cache/.gitkeep
+storage/framework/sessions/*
+!storage/framework/sessions/.gitkeep
+storage/framework/views/*
+!storage/framework/views/.gitkeep
+
+# Public storage (manejado por volumen)
+public/storage
+storage/app/public/creaciones_images/*
