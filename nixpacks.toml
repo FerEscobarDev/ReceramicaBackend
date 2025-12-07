@@ -2,14 +2,3 @@
 IS_LARAVEL = "yes"
 NIXPACKS_PHP_ROOT_DIR = "/app/public"
 
-[phases.setup]
-nixPkgs = ["...", "php83Packages.composer"]
-
-[phases.install]
-cmds = ["composer install --no-dev --prefer-dist --optimize-autoloader"]
-
-[phases.build]
-cmds = ["php artisan storage:link || true"]
-
-[start]
-cmd = "php-fpm -y /assets/php-fpm.conf & nginx -c /nginx.conf"
