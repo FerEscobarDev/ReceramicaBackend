@@ -1,0 +1,81 @@
+# Dockerfile para producción - Laravel con Nginx + PHP-FPM
+FROM php:8.2-fpm
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    nginx \
+    supervisor \
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configurar directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY composer.json composer.lock ./
+
+# Instalar dependencias de PHP
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copiar código de la aplicación
+COPY . .
+
+# Copiar configuración personalizada de PHP
+COPY .user.ini /usr/local/etc/php/conf.d/uploads.ini
+
+# Copiar configuración de nginx
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Crear directorios necesarios y permisos
+RUN mkdir -p /var/log/nginx /var/cache/nginx /app/storage/logs /app/storage/framework/sessions /app/storage/framework/views /app/storage/framework/cache \
+    && chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
+
+# Instalar dependencias de Node y compilar assets
+COPY package*.json ./
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && npm ci \
+    && npm run build \
+    && rm -rf node_modules
+
+# Crear archivo de configuración de supervisor
+RUN echo "[supervisord]\n\
+nodaemon=true\n\
+\n\
+[program:php-fpm]\n\
+command=/usr/local/sbin/php-fpm --nodaemonize\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/dev/stdout\n\
+stdout_logfile_maxbytes=0\n\
+stderr_logfile=/dev/stderr\n\
+stderr_logfile_maxbytes=0\n\
+\n\
+[program:nginx]\n\
+command=/usr/sbin/nginx -g 'daemon off;'\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/dev/stdout\n\
+stdout_logfile_maxbytes=0\n\
+stderr_logfile=/dev/stderr\n\
+stderr_logfile_maxbytes=0" > /etc/supervisor/conf.d/supervisord.conf
+
+# Copiar script de entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 80
+
+# Usar entrypoint para ejecutar storage:link en runtime (no en build)
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
