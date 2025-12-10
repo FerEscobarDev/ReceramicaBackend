@@ -10,10 +10,6 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
-      - creaciones_images:/var/www/html/storage/app/public/creaciones_images
+      - /var/lib/docker/creaciones_images:/var/www/html/storage/app/public/creaciones_images
     ports:
       - "80:80"
-
-volumes:
-  creaciones_images:
-    driver: local
