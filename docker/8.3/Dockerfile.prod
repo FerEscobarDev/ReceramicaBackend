@@ -74,6 +74,10 @@ WORKDIR /var/www/html
 # Copy composer files
 COPY composer.json composer.lock ./
 
+# Copy artisan and bootstrap files needed for Composer scripts
+COPY artisan ./
+COPY bootstrap ./bootstrap
+
 # Install PHP dependencies (production only)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
