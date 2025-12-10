@@ -29,6 +29,10 @@ services:
       - SESSION_DRIVER=file
       - SESSION_LIFETIME=120
     volumes:
-      - /var/lib/docker/creaciones_images:/var/www/html/storage/app/public/creaciones_images
+      - creaciones_images:/var/www/html/storage/app/public/creaciones_images
     ports:
       - "80:80"
+
+volumes:
+  creaciones_images:
+    driver: local

@@ -58,21 +58,16 @@ SESSION_LIFETIME=120
 > ```
 > Y copia el valor generado a la variable `APP_KEY` en Dokploy.
 
-### 4. Configurar Volumen
-
-En la sección **Volumes** (pestaña Advanced):
-
-- **Mount Type**: `BIND`
-- **Host Path**: `/var/lib/docker/creaciones_images`
-- **Mount Path**: `/var/www/html/storage/app/public/creaciones_images`
-
-### 5. Configurar Dominio
+### 4. Configurar Dominio
 
 En la sección **Domains**:
 1. Añade el dominio: `ricardo-admin.receramica.com`
 2. Habilita **SSL/TLS** (Dokploy gestionará automáticamente Let's Encrypt)
 
-### 6. Habilitar Isolated Deployment (Opcional)
+> **📦 Nota sobre Volúmenes**:
+> No necesitas configurar volúmenes manualmente en la UI de Dokploy. El archivo `docker-compose.prod.yml` ya define un volumen named `creaciones_images` que Docker creará y gestionará automáticamente para persistir las imágenes subidas.
+
+### 5. Habilitar Isolated Deployment (Opcional)
 
 En la pestaña **Advanced**:
 - Habilita **"Enable Isolated Deployment"** para crear una red dedicada
@@ -149,12 +144,13 @@ docker exec receramica-app chmod -R 775 /var/www/html/storage
 
 ### Las imágenes subidas desaparecen después de reiniciar
 
-**Causa**: El volumen BIND no está configurado correctamente.
+**Causa**: El volumen no se está persistiendo correctamente.
 
 **Solución**:
-1. Verifica que el volumen está configurado en Dokploy
-2. Confirma que el directorio `/var/lib/docker/creaciones_images` existe en el host
-3. Verifica los permisos del directorio en el host
+1. Verifica que el volumen `creaciones_images` existe: `docker volume ls`
+2. El volumen se crea automáticamente por Docker Compose
+3. Las imágenes se almacenan en el volumen Docker gestionado por Dokploy
+4. Para inspeccionar el volumen: `docker volume inspect <project>_creaciones_images`
 
 ## Comandos Útiles
 
