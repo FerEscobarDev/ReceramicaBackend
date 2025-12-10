@@ -34,3 +34,9 @@ services:
       - SESSION_DOMAIN=${SESSION_DOMAIN:-null}
     volumes:
       - /var/lib/docker/creaciones_images:/var/www/html/storage/app/public/creaciones_images
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
