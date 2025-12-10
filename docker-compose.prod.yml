@@ -9,5 +9,28 @@ services:
     container_name: receramica-app
     restart: unless-stopped
     working_dir: /var/www/html
+    environment:
+      # Dokploy will inject all environment variables here
+      - APP_NAME=${APP_NAME}
+      - APP_ENV=${APP_ENV}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG}
+      - APP_URL=${APP_URL}
+      - LOG_CHANNEL=${LOG_CHANNEL}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - BROADCAST_DRIVER=${BROADCAST_DRIVER}
+      - CACHE_DRIVER=${CACHE_DRIVER}
+      - FILESYSTEM_DISK=${FILESYSTEM_DISK}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION}
+      - SESSION_DRIVER=${SESSION_DRIVER}
+      - SESSION_LIFETIME=${SESSION_LIFETIME}
+      - SESSION_PATH=${SESSION_PATH:-/}
+      - SESSION_DOMAIN=${SESSION_DOMAIN:-null}
     volumes:
       - /var/lib/docker/creaciones_images:/var/www/html/storage/app/public/creaciones_images
