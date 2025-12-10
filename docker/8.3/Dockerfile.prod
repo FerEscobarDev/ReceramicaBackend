@@ -1,0 +1,128 @@
+FROM ubuntu:22.04 AS base
+
+LABEL maintainer="Receramica"
+
+ARG WWWGROUP=1000
+ARG NODE_VERSION=20
+ARG POSTGRES_VERSION=15
+
+WORKDIR /var/www/html
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install system dependencies
+RUN apt-get update \
+    && mkdir -p /etc/apt/keyrings \
+    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git sqlite3 libcap2-bin libpng-dev dnsutils librsvg2-bin nano \
+    && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
+    && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
+    && apt-get update \
+    && apt-get install -y php8.3-cli php8.3-dev php8.3-fpm \
+    php8.3-pgsql php8.3-sqlite3 php8.3-gd php8.3-curl \
+    php8.3-imap php8.3-mysql php8.3-mbstring \
+    php8.3-xml php8.3-zip php8.3-bcmath php8.3-soap \
+    php8.3-intl php8.3-readline php8.3-ldap \
+    php8.3-msgpack php8.3-igbinary php8.3-redis php8.3-imagick \
+    && apt-get install -y nginx supervisor \
+    && apt-get -y autoremove \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install Composer
+RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
+
+# Configure PHP-FPM
+RUN sed -i 's/listen = \/run\/php\/php8.3-fpm.sock/listen = 127.0.0.1:9000/' /etc/php/8.3/fpm/pool.d/www.conf \
+    && sed -i 's/;clear_env = no/clear_env = no/' /etc/php/8.3/fpm/pool.d/www.conf
+
+# ============================================
+# Stage 1: Install Node.js and build frontend
+# ============================================
+FROM base AS frontend-builder
+
+ARG NODE_VERSION=20
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VERSION.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
+    && apt-get install -y nodejs \
+    && npm install -g npm
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy application files
+COPY . .
+
+# Build frontend assets
+RUN npm run build
+
+# ============================================
+# Stage 2: Install PHP dependencies
+# ============================================
+FROM base AS php-builder
+
+WORKDIR /var/www/html
+
+# Copy composer files
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies (production only)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+# ============================================
+# Stage 3: Final production image
+# ============================================
+FROM base AS production
+
+WORKDIR /var/www/html
+
+# Copy PHP dependencies from builder
+COPY --from=php-builder /var/www/html/vendor ./vendor
+
+# Copy application code
+COPY . .
+
+# Copy built frontend assets
+COPY --from=frontend-builder /app/public/build ./public/build
+
+# Copy configuration files
+COPY docker/8.3/php.ini /etc/php/8.3/fpm/conf.d/99-custom.ini
+COPY docker/8.3/php.ini /etc/php/8.3/cli/conf.d/99-custom.ini
+COPY docker/8.3/nginx.conf /etc/nginx/sites-available/default
+COPY docker/8.3/supervisord.prod.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/8.3/entrypoint.prod.sh /usr/local/bin/entrypoint.sh
+
+# Make entrypoint executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Create necessary directories and set permissions
+RUN mkdir -p /var/www/html/storage/framework/cache \
+    && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/storage/framework/views \
+    && mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/storage/app/public/creaciones_images \
+    && mkdir -p /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
+
+# Create user for running the application
+RUN groupadd --force -g $WWWGROUP sail || true \
+    && useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail || true
+
+EXPOSE 80
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

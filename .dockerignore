@@ -24,6 +24,7 @@ yarn-error.log
 .env
 .env.*
 !.env.example
+!.env.dokploy
 
 # Build artifacts
 *.log
@@ -37,7 +38,9 @@ storage/logs/*
 # Docker
 Dockerfile
 Dockerfile.*
+!docker/8.3/Dockerfile.prod
 docker-compose*.yml
+!docker-compose.prod.yml
 .dockerignore
 
 # CI/CD

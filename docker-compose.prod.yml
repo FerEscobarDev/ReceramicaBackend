@@ -1,0 +1,34 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/8.3/Dockerfile.prod
+      args:
+        WWWGROUP: 1000
+    image: receramica-laravel:latest
+    container_name: receramica-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      - APP_NAME=Receramica
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://ricardo-admin.receramica.com
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=error
+      - DB_CONNECTION=mysql
+      - DB_HOST=receramica-receramica-db-zs9qhl
+      - DB_PORT=3306
+      - DB_DATABASE=u373237400_receramica
+      - DB_USERNAME=u373237400_ricardo
+      - DB_PASSWORD=7m$$C&7Gouz
+      - BROADCAST_DRIVER=log
+      - CACHE_DRIVER=file
+      - FILESYSTEM_DISK=local
+      - QUEUE_CONNECTION=sync
+      - SESSION_DRIVER=file
+      - SESSION_LIFETIME=120
+    volumes:
+      - /var/lib/docker/creaciones_images:/var/www/html/storage/app/public/creaciones_images
+    ports:
+      - "80:80"
