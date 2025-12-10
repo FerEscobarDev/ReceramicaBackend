@@ -61,6 +61,9 @@ RUN npm ci
 # Copy application files
 COPY . .
 
+# Copy vendor directory from php-builder (needed for Ziggy)
+COPY --from=php-builder /var/www/html/vendor ./vendor
+
 # Build frontend assets
 RUN npm run build
 
