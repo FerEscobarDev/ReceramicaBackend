@@ -9,6 +9,8 @@ services:
     container_name: receramica-app
     restart: unless-stopped
     working_dir: /var/www/html
+    expose:
+      - "80"
     environment:
       # Dokploy will inject all environment variables here
       - APP_NAME=${APP_NAME}
