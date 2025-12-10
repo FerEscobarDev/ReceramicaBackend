@@ -11,5 +11,3 @@ services:
     working_dir: /var/www/html
     volumes:
       - /var/lib/docker/creaciones_images:/var/www/html/storage/app/public/creaciones_images
-    ports:
-      - "80:80"
