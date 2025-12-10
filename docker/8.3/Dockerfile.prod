@@ -39,7 +39,25 @@ RUN sed -i 's/listen = \/run\/php\/php8.3-fpm.sock/listen = 127.0.0.1:9000/' /et
     && sed -i 's/;clear_env = no/clear_env = no/' /etc/php/8.3/fpm/pool.d/www.conf
 
 # ============================================
-# Stage 1: Install Node.js and build frontend
+# Stage 1: Install PHP dependencies
+# ============================================
+FROM base AS php-builder
+
+WORKDIR /var/www/html
+
+# Copy composer files
+COPY composer.json composer.lock ./
+
+# Copy artisan, bootstrap, and routes needed for Composer scripts
+COPY artisan ./
+COPY bootstrap ./bootstrap
+COPY routes ./routes
+
+# Install PHP dependencies (production only)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+# ============================================
+# Stage 2: Install Node.js and build frontend
 # ============================================
 FROM base AS frontend-builder
 
@@ -66,24 +84,6 @@ COPY --from=php-builder /var/www/html/vendor ./vendor
 
 # Build frontend assets
 RUN npm run build
-
-# ============================================
-# Stage 2: Install PHP dependencies
-# ============================================
-FROM base AS php-builder
-
-WORKDIR /var/www/html
-
-# Copy composer files
-COPY composer.json composer.lock ./
-
-# Copy artisan, bootstrap, and routes needed for Composer scripts
-COPY artisan ./
-COPY bootstrap ./bootstrap
-COPY routes ./routes
-
-# Install PHP dependencies (production only)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 # ============================================
 # Stage 3: Final production image
