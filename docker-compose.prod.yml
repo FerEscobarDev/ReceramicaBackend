@@ -11,6 +11,9 @@ services:
     working_dir: /var/www/html
     expose:
       - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.receramica-app.loadbalancer.server.port=80"
     environment:
       # Dokploy will inject all environment variables here
       - APP_NAME=${APP_NAME}
